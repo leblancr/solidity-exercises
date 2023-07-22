@@ -24,13 +24,6 @@ contract RareCoin {
         skillsCoinAddress = _skillsCoinAddress;
     }
 
-    function askTheMeaningOfLife(address source) public returns (uint256) {
-        (bool ok, bytes memory result) = source.call(abi.encodeWithSignature("meaningOfLifeAndAllExistence()"));
-        require(ok, "call failed");
-
-        return abi.decode(result, (uint256));
-    }
-
     function balanceOf() public view returns (uint256) {
         return rareCoinBalance;
     }
@@ -70,14 +63,10 @@ contract SkillsCoin {
 
     // 
     function approve(address spender, uint256 amount) public returns (bool) {
-        amount = balanceOf[msg.sender];
-        allowance[msg.sender][spender] = amount;
+        // amount = balanceOf[msg.sender];
+        allowance[msg.sender][spender] = amount;  // msg.sender = person who called function
 
         return true;
-    }
-
-     function meaningOfLifeAndAllExistence() public pure returns (uint256) {
-        return 42;
     }
 
    // tokens go into the minters balance.
@@ -86,7 +75,8 @@ contract SkillsCoin {
         totalSupply += amount;
     }
 
-   function transferFrom(address from, address to, uint256 amount) public returns (uint256) {
+    //
+   function transferFrom(address from, address to, uint256 amount) public returns (bool) {
         require(to != address(0), "cannot send to address(0)");
 
         if (msg.sender != from) {
@@ -95,10 +85,17 @@ contract SkillsCoin {
             allowance[from][msg.sender] -= amount;
         }
 
+        return helperTransfer(from, to, amount);
+    }
+
+    // it's very important for this function to be internal!
+    function helperTransfer(address from, address   to, uint256 amount) internal returns (bool) {
+        require(balanceOf[from] >= amount, "not enough money");
+        require(to != address(0), "cannot send to address(0)");
         balanceOf[from] -= amount;
         balanceOf[to] += amount;
-        
-        return amount;
-    }
-}
 
+        return true;
+    }
+
+}
